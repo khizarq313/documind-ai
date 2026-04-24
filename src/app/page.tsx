@@ -44,7 +44,7 @@ export default function WorkspacePage() {
 
   if (authLoading) {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-primary)' }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-primary)' }}>
         <Loader2 size={32} className="animate-spin-slow" style={{ color: 'var(--color-primary)' }} />
       </div>
     );

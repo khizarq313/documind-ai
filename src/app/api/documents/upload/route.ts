@@ -4,7 +4,6 @@
 // ═══════════════════════════════════════════════════
 
 import { NextRequest, NextResponse } from 'next/server';
-import { PDFParse } from 'pdf-parse';
 import { v4 as uuidv4 } from 'uuid';
 
 const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
@@ -33,22 +32,18 @@ export async function POST(request: NextRequest) {
     // Read file buffer
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
+    const pdf = (await import('pdf-parse')).default;
 
     let fullText = '';
     let pageCount = 1;
-    let parsedPages: Array<{ num: number; text: string }> = [];
 
-    const parser = new PDFParse({ data: buffer });
     try {
-      const textResult = await parser.getText();
+      const textResult = await pdf(buffer);
       fullText = textResult.text || '';
-      parsedPages = textResult.pages ?? [];
-      pageCount = textResult.total || textResult.pages?.length || 1;
+      pageCount = textResult.numpages || 1;
     } catch (error) {
       console.error('[Upload API Parse Error]', error);
       return NextResponse.json({ error: 'Failed to parse PDF. The file may be corrupted or password-protected.' }, { status: 422 });
-    } finally {
-      await parser.destroy();
     }
 
     if (fullText.trim().length === 0) {
@@ -56,10 +51,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Chunk the text using real page boundaries when available.
-    const { chunkPages, chunkText } = await import('@/lib/chunking');
-    const chunks = parsedPages.length > 0
-      ? chunkPages(parsedPages)
-      : chunkText(fullText, pageCount);
+    const { chunkText } = await import('@/lib/chunking');
+    const chunks = chunkText(fullText, pageCount);
 
     const now = new Date().toISOString();
     const docId = uuidv4();
