@@ -1,10 +1,11 @@
 'use client';
 
 import React, { useMemo, useState } from 'react';
-import { Loader2, LogOut, PencilLine, ShieldCheck, Sparkles, UserRound } from 'lucide-react';
+import { Loader2, LogOut, MoonStar, PencilLine, ShieldCheck, Sparkles, SunMedium, UserRound } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import ConfirmDialog from '@/components/ConfirmDialog';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTheme } from '@/contexts/ThemeContext';
 import { useToast } from '@/contexts/ToastContext';
 import * as storage from '@/lib/storage';
 
@@ -31,6 +32,7 @@ const PROFILE_CARDS = [
 
 export default function ProfilePage() {
   const { user, isLoading: authLoading, renameUser, logout } = useAuth();
+  const { isDark, toggleTheme } = useTheme();
   const { addToast } = useToast();
   const [draftName, setDraftName] = useState<string | null>(null);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
@@ -177,6 +179,10 @@ export default function ProfilePage() {
                   <p className="mono-label">Workspace</p>
                   <h2 className="profile-panel-title">Quick settings</h2>
                 </div>
+                <button className="btn-secondary" type="button" onClick={toggleTheme}>
+                  {isDark ? <SunMedium size={14} /> : <MoonStar size={14} />}
+                  {isDark ? 'Light mode' : 'Dark mode'}
+                </button>
               </div>
 
               <div className="profile-card-stack">

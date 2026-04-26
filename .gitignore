@@ -41,3 +41,4 @@ next-env.d.ts
 # User Data
 output.txt
 rename.js
+lint_output.txt

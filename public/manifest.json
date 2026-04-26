@@ -4,8 +4,8 @@
   "description": "Intelligent Document Analysis & AI-Powered Insights",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0B0F19",
-  "theme_color": "#0B0F19",
+  "background_color": "#0F1411",
+  "theme_color": "#0F1411",
   "orientation": "portrait-primary",
   "icons": [
     {

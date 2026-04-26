@@ -35,8 +35,8 @@ export default function AuthPage() {
           >
             <Image src="/brand-mark.svg" alt="DocuMind AI Logo" width={72} height={72} priority />
           </div>
-          <h1 style={{ color: 'white', fontSize: 'clamp(1.4rem,3vw,1.8rem)', fontWeight: 900, letterSpacing: '-0.03em' }}>DocuMind AI</h1>
-          <p style={{ color: 'rgba(148,163,184,0.72)', fontSize: '0.875rem', marginTop: 6 }}>Intelligent Document Analysis</p>
+          <h1 style={{ color: 'var(--text-primary)', fontSize: 'clamp(1.4rem,3vw,1.8rem)', fontWeight: 900, letterSpacing: '-0.03em' }}>DocuMind AI</h1>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginTop: 6 }}>Intelligent Document Analysis</p>
         </div>
 
         <p className="auth-kicker">GET STARTED</p>
@@ -76,7 +76,7 @@ export default function AuthPage() {
           ].map(({ icon: Icon, label }) => (
             <div
               key={label}
-              style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '5px 12px', borderRadius: 9999, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)', color: 'rgba(226,232,240,0.7)', fontSize: '0.72rem' }}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '5px 12px', borderRadius: 9999, background: 'rgba(var(--panel-rgb),0.72)', border: '1px solid rgba(var(--border-rgb),0.15)', color: 'var(--text-secondary)', fontSize: '0.72rem' }}
             >
               <Icon size={12} style={{ color: 'var(--color-primary)' }} />
               {label}

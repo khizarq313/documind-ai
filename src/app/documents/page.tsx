@@ -209,7 +209,7 @@ export default function DocumentsPage() {
                   return (
                     <div
                       key={doc.id}
-                      style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '14px 20px', borderRadius: 14, background: 'var(--surface-container-low)', border: '1px solid rgba(255,255,255,0.03)', cursor: 'pointer', transition: 'all 200ms ease' }}
+                      style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '14px 20px', borderRadius: 14, background: 'var(--surface-container-low)', border: '1px solid rgba(197,200,190,0.15)', cursor: 'pointer', transition: 'all 200ms ease' }}
                       onClick={() => handleOpenInWorkspace(doc.id)}
                       className="document-card"
                     >

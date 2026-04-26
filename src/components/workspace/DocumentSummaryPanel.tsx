@@ -1,6 +1,6 @@
 ﻿'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import {
   X, RefreshCw, Loader2,
   Lightbulb, Target, TrendingUp, Shield, BookOpen, Star,
@@ -46,20 +46,29 @@ export default function DocumentSummaryPanel({ document, isOpen, onClose }: Docu
   const { user } = useAuth();
   const { addToast } = useToast();
   const [mode, setMode] = useState<SummaryMode>('normal');
-  const [summary, setSummary] = useState<DocumentSummaryResponse | null>(null);
+  const [summaryState, setSummaryState] = useState<{
+    documentId: string;
+    mode: SummaryMode;
+    data: DocumentSummaryResponse | null;
+  } | null>(null);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    if (!document) { setSummary(null); return; }
-    const cached = storage.getSummary(document.id, mode);
-    setSummary(cached);
-  }, [document, mode]);
+  const summary = useMemo(() => {
+    if (!document) return null;
+    if (summaryState && summaryState.documentId === document.id && summaryState.mode === mode) {
+      return summaryState.data;
+    }
+    return storage.getSummary(document.id, mode);
+  }, [document, mode, summaryState]);
 
   const generateSummary = useCallback(async (force = false) => {
     if (!document || !user) return;
     if (!force) {
       const cached = storage.getSummary(document.id, mode);
-      if (cached) { setSummary(cached); return; }
+      if (cached) {
+        setSummaryState({ documentId: document.id, mode, data: cached });
+        return;
+      }
     }
     setLoading(true);
     try {
@@ -74,7 +83,7 @@ export default function DocumentSummaryPanel({ document, isOpen, onClose }: Docu
         throw new Error(err.error || 'Summary generation failed');
       }
       const data: DocumentSummaryResponse = await res.json();
-      setSummary(data);
+      setSummaryState({ documentId: document.id, mode, data });
       storage.setSummary(document.id, mode, data);
       addToast('success', 'Summary generated successfully');
     } catch (err) {

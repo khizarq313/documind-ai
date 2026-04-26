@@ -135,15 +135,15 @@ export default function AnalyticsPage() {
                     <AreaChart data={dailyData}>
                       <defs>
                         <linearGradient id="queryGradient" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#7c3aed" stopOpacity={0.3} />
-                          <stop offset="95%" stopColor="#7c3aed" stopOpacity={0} />
+                          <stop offset="5%" stopColor="var(--color-primary)" stopOpacity={0.22} />
+                          <stop offset="95%" stopColor="var(--color-primary)" stopOpacity={0} />
                         </linearGradient>
                       </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(74,68,85,0.18)" />
-                      <XAxis dataKey="date" stroke="#4a4455" fontSize={11} />
-                      <YAxis stroke="#4a4455" fontSize={11} allowDecimals={false} />
-                      <Tooltip contentStyle={{ background: '#1a1b23', border: '1px solid rgba(74,68,85,0.3)', borderRadius: 10, color: '#e3e1ec', fontSize: 13 }} />
-                      <Area type="monotone" dataKey="count" stroke="#7c3aed" strokeWidth={2} fill="url(#queryGradient)" name="Queries" />
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(197,200,190,0.6)" />
+                      <XAxis dataKey="date" stroke="#6d7169" fontSize={11} />
+                      <YAxis stroke="#6d7169" fontSize={11} allowDecimals={false} />
+                      <Tooltip contentStyle={{ background: 'rgba(var(--panel-rgb),0.96)', border: '1px solid rgba(var(--border-rgb),0.35)', borderRadius: 10, color: 'var(--text-primary)', fontSize: 13, boxShadow: '0 16px 32px rgba(var(--primary-rgb),0.12)' }} />
+                      <Area type="monotone" dataKey="count" stroke="var(--color-primary)" strokeWidth={2} fill="url(#queryGradient)" name="Queries" />
                     </AreaChart>
                   </ResponsiveContainer>
                 </div>
@@ -190,8 +190,8 @@ export default function AnalyticsPage() {
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                   {documents.map((doc) => (
-                    <div key={doc.id} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 14px', borderRadius: 12, background: 'rgba(255,255,255,0.03)' }}>
-                      <div style={{ width: 40, height: 40, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(124,58,237,0.12)', flexShrink: 0 }}>
+                    <div key={doc.id} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 14px', borderRadius: 12, background: 'var(--surface-container)' }}>
+                      <div style={{ width: 40, height: 40, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(85,98,77,0.08)', flexShrink: 0 }}>
                         <FileText size={18} style={{ color: 'var(--color-primary)' }} />
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
@@ -215,7 +215,7 @@ export default function AnalyticsPage() {
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {queryLog.map((q) => (
-                    <div key={q.id} style={{ padding: '12px 14px', borderRadius: 12, background: 'rgba(255,255,255,0.03)' }}>
+                    <div key={q.id} style={{ padding: '12px 14px', borderRadius: 12, background: 'var(--surface-container)' }}>
                       <p style={{ fontSize: '0.875rem', color: 'var(--text-primary)', marginBottom: 8 }}>{q.question}</p>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                         <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>📄 {truncate(q.documentName, 25)}</span>
@@ -244,14 +244,14 @@ export default function AnalyticsPage() {
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                   {modelUsage.map(({ model, count }) => (
-                    <div key={model} style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '14px 16px', borderRadius: 12, background: 'rgba(255,255,255,0.03)' }}>
-                      <div style={{ width: 40, height: 40, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(99,102,241,0.1)', flexShrink: 0 }}>
+                    <div key={model} style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '14px 16px', borderRadius: 12, background: 'var(--surface-container)' }}>
+                      <div style={{ width: 40, height: 40, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(254,215,210,0.56)', flexShrink: 0 }}>
                         <BarChart3 size={18} style={{ color: 'var(--color-secondary)' }} />
                       </div>
                       <div style={{ flex: 1 }}>
                         <p style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-primary)' }}>{model}</p>
-                        <div style={{ width: '100%', height: 6, borderRadius: 999, marginTop: 8, background: 'rgba(74,68,85,0.3)' }}>
-                          <div style={{ height: '100%', borderRadius: 999, background: 'linear-gradient(135deg,#7c3aed,#4cd7f6)', width: `${Math.min((count / Math.max(...modelUsage.map((m) => m.count))) * 100, 100)}%` }} />
+                        <div style={{ width: '100%', height: 6, borderRadius: 999, marginTop: 8, background: 'rgba(197,200,190,0.4)' }}>
+                          <div style={{ height: '100%', borderRadius: 999, background: 'var(--gradient-accent)', width: `${Math.min((count / Math.max(...modelUsage.map((m) => m.count))) * 100, 100)}%` }} />
                         </div>
                       </div>
                       <span style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-primary)' }}>{count}</span>

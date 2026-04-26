@@ -5,8 +5,9 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { createPortal } from 'react-dom';
-import { ArrowLeft, Bell, LogOut, Menu, Sparkles, UserRound } from 'lucide-react';
+import { ArrowLeft, Bell, LogOut, Menu, MoonStar, Sparkles, SunMedium, UserRound } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface NavbarProps {
   onToggleSidebar?: () => void;
@@ -17,6 +18,7 @@ export default function Navbar({ onToggleSidebar, isSidebarOpen = true }: Navbar
   const pathname = usePathname();
   const router = useRouter();
   const { user, logout } = useAuth();
+  const { isDark, toggleTheme } = useTheme();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -129,6 +131,17 @@ export default function Navbar({ onToggleSidebar, isSidebarOpen = true }: Navbar
                 >
                   <UserRound size={15} />
                   Profile
+                </button>
+                <button
+                  className="profile-dropdown-action"
+                  type="button"
+                  onClick={() => {
+                    toggleTheme();
+                    setIsProfileOpen(false);
+                  }}
+                >
+                  {isDark ? <SunMedium size={15} /> : <MoonStar size={15} />}
+                  {isDark ? 'Light mode' : 'Dark mode'}
                 </button>
                 <button
                   className="profile-dropdown-action profile-dropdown-action-danger"
