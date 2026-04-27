@@ -7,7 +7,7 @@ import MobileTabBar from '@/components/MobileTabBar';
 import ServiceWorkerRegistrar from '@/components/ServiceWorkerRegistrar';
 
 export const metadata: Metadata = {
-  title: 'DocuMind AI — Intelligent Document Analysis',
+  title: 'DocuMind AI',
   description: 'Upload PDFs, ask questions, get AI-powered insights. DocuMind AI is your intelligent document assistant powered by advanced language models.',
   manifest: '/manifest.json',
   icons: { icon: '/brand-mark.svg', apple: '/brand-mark.svg', shortcut: '/brand-mark.svg' },

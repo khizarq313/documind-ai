@@ -166,7 +166,7 @@ export default function Navbar({ onToggleSidebar, isSidebarOpen = true }: Navbar
         >
           <div className="logout-dialog" onClick={(e) => e.stopPropagation()}>
             <div className="logout-dialog-icon">⚠️</div>
-            <h3 className="logout-dialog-title">Sign out?</h3>
+            <h3 className="logout-dialog-title">Logout?</h3>
             <p className="logout-dialog-copy">
               All your local chats and data will be permanently deleted. This cannot be undone.
             </p>
@@ -175,7 +175,7 @@ export default function Navbar({ onToggleSidebar, isSidebarOpen = true }: Navbar
                 No, stay
               </button>
               <button className="logout-btn logout-btn-confirm" type="button" onClick={handleLogout}>
-                Yes, sign out
+                Yes, logout
               </button>
             </div>
           </div>
@@ -184,10 +184,10 @@ export default function Navbar({ onToggleSidebar, isSidebarOpen = true }: Navbar
       )}
 
       {canUsePortal && isLoggingOut && createPortal(
-        <div className="logout-overlay" role="status" aria-label="Signing out">
+        <div className="logout-overlay" role="status" aria-label="Logging out">
           <div className="logout-progress-box">
             <span className="logout-progress-spinner" aria-hidden="true" />
-            <p className="logout-progress-label">Signing out…</p>
+            <p className="logout-progress-label">Logging out…</p>
           </div>
         </div>,
         document.body,

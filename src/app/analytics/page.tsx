@@ -132,7 +132,7 @@ export default function AnalyticsPage() {
                 </div>
                 <div style={{ height: 240, minHeight: 0 }}>
                   <ResponsiveContainer width="100%" height={240} minWidth={0}>
-                    <AreaChart data={dailyData}>
+                    <AreaChart data={dailyData} margin={{ top: 5, right: 5, left: -20, bottom: 5 }}>
                       <defs>
                         <linearGradient id="queryGradient" x1="0" y1="0" x2="0" y2="1">
                           <stop offset="5%" stopColor="var(--color-primary)" stopOpacity={0.22} />

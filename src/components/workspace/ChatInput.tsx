@@ -217,16 +217,18 @@ const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(function ChatInput
                   <div ref={plusMenuRef} className="plus-menu">
                     {ACTION_MENU_ITEMS.map((item) => {
                       const IconComponent = item.icon;
+                      const isSelected = item.type === 'mode' && item.value === summaryMode;
                       return (
                         <button
                           key={item.id}
-                          className="plus-menu-item"
+                          className={`plus-menu-item${isSelected ? ' plus-menu-item--selected' : ''}`}
                           type="button"
                           onClick={() => handlePlusMenuAction(item)}
                           disabled={disabled || isUploading}
                         >
                           <IconComponent size={16} />
                           <span>{item.label}</span>
+                          {isSelected && <span className="plus-menu-item-check" aria-hidden="true">✓</span>}
                         </button>
                       );
                     })}

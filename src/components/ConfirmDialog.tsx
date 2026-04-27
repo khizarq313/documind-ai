@@ -4,18 +4,22 @@ import React from 'react';
 
 interface ConfirmDialogProps {
   open: boolean;
+  icon?: React.ReactNode;
   title: string;
   message: string;
   confirmLabel?: string;
+  cancelLabel?: string;
   onConfirm: () => void;
   onCancel: () => void;
 }
 
 export default function ConfirmDialog({
   open,
+  icon,
   title,
   message,
   confirmLabel = 'Delete',
+  cancelLabel = 'Cancel',
   onConfirm,
   onCancel,
 }: ConfirmDialogProps) {
@@ -23,34 +27,29 @@ export default function ConfirmDialog({
 
   return (
     <div
-      className="fixed inset-0 z-[9998] flex items-center justify-center p-4"
+      className="logout-overlay"
       onClick={onCancel}
       role="dialog"
       aria-modal="true"
       aria-labelledby="confirm-dialog-title"
     >
-      {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-
-      {/* Dialog */}
       <div
-        className="relative w-full max-w-sm rounded-xl p-6 animate-slide-up"
-        style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-default)', boxShadow: 'var(--shadow-lg)' }}
+        className="logout-dialog"
         onClick={(e) => e.stopPropagation()}
       >
-        <h3 id="confirm-dialog-title" className="text-base font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>
+        {icon && <div className="logout-dialog-icon">{icon}</div>}
+        <h3 id="confirm-dialog-title" className="logout-dialog-title">
           {title}
         </h3>
-        <p className="text-sm mb-6" style={{ color: 'var(--text-secondary)' }}>
+        <p className="logout-dialog-copy">
           {message}
         </p>
-        <div className="flex justify-end gap-3">
-          <button className="btn-secondary text-sm py-2 px-4" onClick={onCancel}>
-            Cancel
+        <div className="logout-dialog-actions">
+          <button className="logout-btn logout-btn-cancel" onClick={onCancel}>
+            {cancelLabel}
           </button>
           <button
-            className="text-sm py-2 px-4 rounded-lg font-semibold border-none cursor-pointer transition-all"
-            style={{ background: 'var(--color-error)', color: 'white' }}
+            className="logout-btn logout-btn-confirm"
             onClick={onConfirm}
             id="confirm-dialog-confirm"
           >

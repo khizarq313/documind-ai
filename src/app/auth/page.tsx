@@ -26,17 +26,30 @@ export default function AuthPage() {
 
   return (
     <div className="auth-page">
+
+      {/* ── Mobile-only hero section ── */}
+      <div className="auth-mobile-hero">
+        <div className="auth-mobile-hero-inner">
+          <Image src="/brand-mark.svg" alt="DocuMind AI" width={60} height={60} priority className="auth-mobile-logo-img" />
+          <h1 className="auth-mobile-brand">DocuMind AI</h1>
+          <p className="auth-mobile-tagline">Intelligent Document Analysis</p>
+        </div>
+        {/* Wave separator */}
+        <div className="auth-mobile-wave" aria-hidden="true">
+          <svg viewBox="0 0 375 72" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M0,48 C60,10 130,72 210,42 C270,18 320,60 375,38 L375,72 L0,72 Z" className="auth-wave-path" />
+          </svg>
+        </div>
+      </div>
+
+      {/* ── Card (desktop) / flat form (mobile) ── */}
       <div className="auth-card animate-slide-up">
-        {/* Logo */}
-        <div style={{ textAlign: 'center', marginBottom: 28 }}>
-          <div
-            className="animate-pulse-glow"
-            style={{ width: 72, height: 72, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}
-          >
-            <Image src="/brand-mark.svg" alt="DocuMind AI Logo" width={72} height={72} priority />
-          </div>
-          <h1 style={{ color: 'var(--text-primary)', fontSize: 'clamp(1.4rem,3vw,1.8rem)', fontWeight: 900, letterSpacing: '-0.03em' }}>DocuMind AI</h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginTop: 6 }}>Intelligent Document Analysis</p>
+
+        {/* Desktop-only logo block */}
+        <div className="auth-desktop-logo">
+          <Image src="/brand-mark.svg" alt="DocuMind AI Logo" width={72} height={72} priority />
+          <h1 className="auth-desktop-brand">DocuMind AI</h1>
+          <p className="auth-desktop-sub">Intelligent Document Analysis</p>
         </div>
 
         <p className="auth-kicker">GET STARTED</p>
@@ -68,16 +81,13 @@ export default function AuthPage() {
         </form>
 
         {/* Feature pills */}
-        <div style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: 10, marginTop: 24 }}>
+        <div className="auth-feature-pills">
           {[
             { icon: Sparkles, label: 'AI-Powered Analysis' },
             { icon: Shield, label: 'Privacy First' },
             { icon: Zap, label: 'Instant Insights' },
           ].map(({ icon: Icon, label }) => (
-            <div
-              key={label}
-              style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '5px 12px', borderRadius: 9999, background: 'rgba(var(--panel-rgb),0.72)', border: '1px solid rgba(var(--border-rgb),0.15)', color: 'var(--text-secondary)', fontSize: '0.72rem' }}
-            >
+            <div key={label} className="auth-feature-pill">
               <Icon size={12} style={{ color: 'var(--color-primary)' }} />
               {label}
             </div>

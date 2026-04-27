@@ -210,7 +210,7 @@ export default function ProfilePage() {
               </div>
 
               <p className="profile-danger-copy">
-                Signing out clears your local chats, favorites, query history, and uploaded document metadata from this browser.
+                Logging out clears your local chats, favorites, query history, and uploaded document metadata from this browser.
               </p>
 
               <button className="profile-logout-button" type="button" onClick={() => setShowLogoutConfirm(true)}>
@@ -224,9 +224,11 @@ export default function ProfilePage() {
 
       <ConfirmDialog
         open={showLogoutConfirm}
-        title="Sign out?"
+        icon="⚠️"
+        title="Logout?"
         message="All local chats and workspace data will be removed from this browser."
-        confirmLabel="Logout"
+        confirmLabel="Yes, logout"
+        cancelLabel="No, stay"
         onCancel={() => setShowLogoutConfirm(false)}
         onConfirm={logout}
       />
