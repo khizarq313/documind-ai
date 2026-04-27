@@ -200,7 +200,7 @@ export default function DocumentsPage() {
 
           {/* Documents grid/list */}
           {!loading && filtered.length > 0 && (
-            <div className={viewMode === 'grid' ? 'documents-grid' : ''} style={viewMode === 'list' ? { display: 'flex', flexDirection: 'column', gap: 10 } : undefined}>
+            <div className={viewMode === 'grid' ? 'documents-grid' : 'documents-list'}>
               {filtered.map((doc) => {
                 const isFav = favorites.includes(doc.id);
                 const isMenuOpen = menuOpen === doc.id;
@@ -209,12 +209,11 @@ export default function DocumentsPage() {
                   return (
                     <div
                       key={doc.id}
-                      style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '14px 20px', borderRadius: 14, background: 'var(--surface-container-low)', border: '1px solid rgba(197,200,190,0.15)', cursor: 'pointer', transition: 'all 200ms ease' }}
+                      className="document-card document-card-list"
                       onClick={() => handleOpenInWorkspace(doc.id)}
-                      className="document-card"
                     >
                       <div className="doc-card-file-icon pdf"><FileText size={20} /></div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
+                      <div className="document-card-list-main">
                         <h4 className="doc-card-title">{doc.filename}</h4>
                         <p className="doc-card-meta">{formatFileSize(doc.sizeBytes)} · {doc.pageCount} pages · {formatRelativeTime(doc.createdAt)}</p>
                       </div>

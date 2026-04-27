@@ -4,7 +4,8 @@ import React, { useState, useMemo, useCallback } from 'react';
 import {
   X, RefreshCw, Loader2,
   Lightbulb, Target, TrendingUp, Shield, BookOpen, Star,
-  Zap, Users, Clock, CheckCircle, FileText, Hash
+  Zap, Users, Clock, CheckCircle, FileText, Hash,
+  Mail, Phone, Globe, Briefcase, GraduationCap, FolderOpen, BadgeCheck
 } from 'lucide-react';
 import type { DocumentRecord, DocumentSummaryResponse, SummaryMode } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
@@ -41,6 +42,17 @@ const ICON_MAP: Record<string, React.ReactNode> = {
   clock: <Clock size={16} />,
   'check-circle': <CheckCircle size={16} />,
 };
+
+function getContactIcon(type: string) {
+  switch (type) {
+    case 'email':
+      return <Mail size={14} />;
+    case 'phone':
+      return <Phone size={14} />;
+    default:
+      return <Globe size={14} />;
+  }
+}
 
 export default function DocumentSummaryPanel({ document, isOpen, onClose }: DocumentSummaryPanelProps) {
   const { user } = useAuth();
@@ -96,7 +108,9 @@ export default function DocumentSummaryPanel({ document, isOpen, onClose }: Docu
   if (!isOpen || !document) return null;
 
   const contacts = summary?.contactInfo?.filter(Boolean) ?? [];
+  const contactLinks = summary?.contactLinks ?? [];
   const isResume = summary?.documentType === 'Resume';
+  const resumeSummary = summary?.resumeSummary;
 
   return (
     <div className="summary-panel animate-fade-in" id="summary-panel">
@@ -158,6 +172,166 @@ export default function DocumentSummaryPanel({ document, isOpen, onClose }: Docu
 
         {summary && !loading && (
           <div className="animate-fade-in">
+            {isResume && resumeSummary && (
+              <>
+                <div className="summary-section-card overview">
+                  <div className="summary-section-heading">
+                    <BadgeCheck size={16} style={{ color: 'var(--primary)' }} />
+                    <h3>Candidate Snapshot</h3>
+                  </div>
+                  <div className="resume-summary-hero">
+                    <div className="resume-summary-copy">
+                      <p className="resume-summary-headline">{resumeSummary.headline || resumeSummary.targetRole}</p>
+                      <p className="resume-summary-subtitle">{resumeSummary.profileSummary}</p>
+                    </div>
+                    <div className="resume-summary-meta">
+                      <span className="chip chip-primary">Target Role: {resumeSummary.targetRole || 'Not clearly stated'}</span>
+                      <span className="chip chip-secondary">Seniority: {resumeSummary.seniority || 'Unknown'}</span>
+                      <span className="chip chip-cyan">ATS: {resumeSummary.atsScore}/100</span>
+                    </div>
+                  </div>
+                </div>
+
+                {contactLinks.length > 0 && (
+                  <div className="summary-section-card">
+                    <div className="summary-section-heading">
+                      <Users size={16} style={{ color: 'var(--primary)' }} />
+                      <h3>Contact Channels</h3>
+                    </div>
+                    <div className="summary-contact-grid">
+                      {contactLinks.map((link) => {
+                        const opensNewTab = /^https?:\/\//i.test(link.href);
+                        return (
+                          <a
+                            key={`${link.type}-${link.value}`}
+                            className="summary-contact-link"
+                            href={link.href}
+                            target={opensNewTab ? '_blank' : undefined}
+                            rel={opensNewTab ? 'noreferrer noopener' : undefined}
+                          >
+                            <span className="summary-contact-link-icon">{getContactIcon(link.type)}</span>
+                            <span className="summary-contact-link-copy">
+                              <span className="summary-contact-link-label">{link.label}</span>
+                              <span className="summary-contact-link-value">{link.value}</span>
+                            </span>
+                          </a>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {resumeSummary.skills.length > 0 && (
+                  <div className="summary-section-card">
+                    <div className="summary-section-heading">
+                      <Zap size={16} style={{ color: 'var(--primary)' }} />
+                      <h3>Skills</h3>
+                    </div>
+                    <div className="resume-skill-list">
+                      {resumeSummary.skills.map((skill) => (
+                        <span key={skill} className="resume-skill-chip">{skill}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {resumeSummary.experience.length > 0 && (
+                  <div className="summary-section-card">
+                    <div className="summary-section-heading">
+                      <Briefcase size={16} style={{ color: 'var(--primary)' }} />
+                      <h3>Experience</h3>
+                    </div>
+                    <div className="resume-timeline-grid">
+                      {resumeSummary.experience.map((item, index) => (
+                        <div key={`${item.company}-${index}`} className="resume-timeline-card">
+                          <h4>{item.role || 'Role not specified'}</h4>
+                          <p className="resume-timeline-meta">{item.company || 'Company not specified'}{item.duration ? ` · ${item.duration}` : ''}</p>
+                          <ul className="resume-list">
+                            {item.highlights.map((highlight) => (
+                              <li key={highlight}>{highlight}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {resumeSummary.projects.length > 0 && (
+                  <div className="summary-section-card">
+                    <div className="summary-section-heading">
+                      <FolderOpen size={16} style={{ color: 'var(--primary)' }} />
+                      <h3>Projects</h3>
+                    </div>
+                    <div className="resume-project-grid">
+                      {resumeSummary.projects.map((project, index) => (
+                        <div key={`${project.name}-${index}`} className="resume-project-card">
+                          <h4>{project.name}</h4>
+                          <p>{project.detail}</p>
+                          {project.technologies.length > 0 && (
+                            <div className="resume-skill-list compact">
+                              {project.technologies.map((technology) => (
+                                <span key={technology} className="resume-skill-chip">{technology}</span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {resumeSummary.education.length > 0 && (
+                  <div className="summary-section-card">
+                    <div className="summary-section-heading">
+                      <GraduationCap size={16} style={{ color: 'var(--primary)' }} />
+                      <h3>Education</h3>
+                    </div>
+                    <div className="resume-education-grid">
+                      {resumeSummary.education.map((education, index) => (
+                        <div key={`${education.institution}-${index}`} className="resume-education-card">
+                          <h4>{education.degree || 'Degree not specified'}</h4>
+                          <p className="resume-timeline-meta">{education.institution || 'Institution not specified'}</p>
+                          <p>{education.stream || 'Stream not specified'}{education.year ? ` · ${education.year}` : ''}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {(resumeSummary.strengths.length > 0 || resumeSummary.gaps.length > 0) && (
+                  <div className="resume-double-grid">
+                    {resumeSummary.strengths.length > 0 && (
+                      <div className="summary-section-card">
+                        <div className="summary-section-heading">
+                          <Star size={16} style={{ color: 'var(--primary)' }} />
+                          <h3>Strengths</h3>
+                        </div>
+                        <ul className="resume-list">
+                          {resumeSummary.strengths.map((strength) => (
+                            <li key={strength}>{strength}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    {resumeSummary.gaps.length > 0 && (
+                      <div className="summary-section-card">
+                        <div className="summary-section-heading">
+                          <Shield size={16} style={{ color: 'var(--secondary)' }} />
+                          <h3>Attention Areas</h3>
+                        </div>
+                        <ul className="resume-list">
+                          {resumeSummary.gaps.map((gap) => (
+                            <li key={gap}>{gap}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </>
+            )}
+
             <div className="summary-section-card overview">
               <div className="summary-section-heading">
                 <BookOpen size={16} style={{ color: 'var(--primary)' }} />
@@ -194,6 +368,27 @@ export default function DocumentSummaryPanel({ document, isOpen, onClose }: Docu
               </div>
             )}
 
+            {!isResume && summary.sections && summary.sections.length > 0 && (
+              <div className="summary-analysis-stack">
+                {summary.sections.map((section) => (
+                  <div key={section.title} className="summary-section-card">
+                    <div className="summary-section-heading">
+                      <Target size={16} style={{ color: 'var(--primary)' }} />
+                      <h3>{section.title}</h3>
+                    </div>
+                    {section.summary ? <p>{section.summary}</p> : null}
+                    {section.bullets.length > 0 && (
+                      <ul className="resume-list">
+                        {section.bullets.map((bullet) => (
+                          <li key={bullet}>{bullet}</li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+
             {summary.metrics?.length > 0 && (
               <div className="summary-section-card">
                 <div className="summary-section-heading">
@@ -221,7 +416,7 @@ export default function DocumentSummaryPanel({ document, isOpen, onClose }: Docu
               </div>
             )}
 
-            {isResume && contacts.length > 0 && (
+            {isResume && contactLinks.length === 0 && contacts.length > 0 && (
               <div className="summary-section-card">
                 <div className="summary-section-heading">
                   <Users size={16} style={{ color: 'var(--primary)' }} />

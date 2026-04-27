@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
 import * as storage from '@/lib/storage';
-import { generateId, truncate } from '@/lib/utils';
+import { buildDocumentProfile, generateId, stripResumeContactsFromText, truncate, isAskingForResumeMetadata, removeEmptySections } from '@/lib/utils';
 import { retrieveTopChunks } from '@/lib/retrieval';
 import type { ChatSession, Message, DocumentRecord, Citation, DocuMindUser } from '@/types';
 import Navbar from '@/components/Navbar';
@@ -14,6 +14,7 @@ import ChatMessages from '@/components/workspace/ChatMessages';
 import ChatInput, { type ChatInputHandle } from '@/components/workspace/ChatInput';
 import { ChevronRight, EllipsisVertical, Loader2, Share2, Upload } from 'lucide-react';
 import Image from 'next/image';
+import { reconstructText } from '@/lib/chunking';
 
 const DOCUMENT_SUGGESTIONS = [
   'Summarize this document',
@@ -195,7 +196,9 @@ function WorkspaceView({ user }: { user: DocuMindUser }) {
       ? storage.getDocumentById(user.id, chatsRef.current.find((c) => c.id === chatId)!.documentId!)
       : null);
 
-    const contextChunks = doc ? retrieveTopChunks(question, doc.chunks, doc.filename, 5) : [];
+    const contextChunks = doc ? retrieveTopChunks(question, doc.chunks, doc.filename, 8) : [];
+    const documentText = doc ? reconstructText(doc.chunks).slice(0, 24000) : '';
+    const documentProfile = doc ? buildDocumentProfile(documentText) : undefined;
 
     const streamingMsgId = generateId();
     setChats((prev) => {
@@ -213,11 +216,41 @@ function WorkspaceView({ user }: { user: DocuMindUser }) {
     const controller = new AbortController();
     abortRef.current = controller;
 
+    let renderedText = '';
+    let pendingText = '';
+    const updateStreamingMessage = (nextText: string) => {
+      setChats((prev) => prev.map((chat) => chat.id !== chatId ? chat : {
+        ...chat,
+        messages: chat.messages.map((message) => message.id === streamingMsgId ? { ...message, text: nextText } : message),
+      }));
+    };
+    const flushStreamingBuffer = () => {
+      if (!pendingText) return;
+      const chunkSize = pendingText.length > 30 ? 18 : pendingText.length > 12 ? 10 : pendingText.length;
+      renderedText += pendingText.slice(0, chunkSize);
+      pendingText = pendingText.slice(chunkSize);
+      updateStreamingMessage(renderedText);
+    };
+    const drainStreamingBuffer = async () => {
+      while (pendingText.length > 0) {
+        flushStreamingBuffer();
+        await new Promise((resolve) => setTimeout(resolve, 24));
+      }
+    };
+    const streamFlushTimer = setInterval(flushStreamingBuffer, 24);
+
     try {
       const res = await fetch('/api/query/stream', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question, contextChunks, documentName: doc?.filename ?? 'Unknown' }),
+        body: JSON.stringify({
+          question,
+          contextChunks,
+          fullText: documentText,
+          documentName: doc?.filename ?? 'Unknown',
+          mode: summaryMode,
+          documentProfile,
+        }),
         signal: controller.signal,
       });
 
@@ -247,9 +280,7 @@ function WorkspaceView({ user }: { user: DocuMindUser }) {
               const data = JSON.parse(line.slice(6));
               if (eventType === 'token' && data.token) {
                 fullText += data.token;
-                setChats((prev) => prev.map((c) => c.id !== chatId ? c : {
-                  ...c, messages: c.messages.map((m) => m.id === streamingMsgId ? { ...m, text: fullText } : m),
-                }));
+                pendingText += data.token;
               } else if (eventType === 'citation') {
                 citations.push({ documentName: data.documentName, pageNumber: data.pageNumber });
               } else if (eventType === 'done') {
@@ -270,14 +301,43 @@ function WorkspaceView({ user }: { user: DocuMindUser }) {
         }
       }
 
+      await drainStreamingBuffer();
+      const finalizedText = documentProfile?.isResume
+        ? stripResumeContactsFromText(fullText, documentProfile.contactLinks)
+        : fullText;
+      const cleanedText = removeEmptySections(finalizedText);
+      if (cleanedText !== renderedText) {
+        updateStreamingMessage(cleanedText);
+      }
+
       setChats((prev) => {
         const updated = prev.map((c) => c.id !== chatId ? c : {
           ...c, lastActivityAt: new Date().toISOString(),
           messages: c.messages.map((m) => m.id === streamingMsgId ? {
-            ...m, text: fullText, isStreaming: false,
+            ...m, text: cleanedText, isStreaming: false,
             citations: citations.length > 0 ? citations : undefined,
             latencyMs: latencyMs || undefined,
             model: model || undefined,
+            documentType: documentProfile?.documentType,
+            resumeMetadata: (() => {
+              if (!documentProfile?.isResume) return undefined;
+              // Only show metadata if:
+              // 1. This is the first message in the chat (no previous messages from assistant), OR
+              // 2. The user explicitly asked for ATS score, contact links, or skills
+              const hasAnyPreviousAssistantMessage = c.messages.some((m) => m.role === 'assistant' && m.id !== streamingMsgId);
+              const isFirstMessage = !hasAnyPreviousAssistantMessage;
+              const userAskedForMetadata = isAskingForResumeMetadata(question);
+
+              if (isFirstMessage || userAskedForMetadata) {
+                return {
+                  atsScore: documentProfile.atsScore ?? 0,
+                  contactLinks: documentProfile.contactLinks,
+                  skills: documentProfile.skills,
+                  profileTitle: documentProfile.profileTitle,
+                };
+              }
+              return undefined;
+            })(),
           } : m),
         });
         const orderedChats = sortChatsByRecent(updated);
@@ -310,10 +370,11 @@ function WorkspaceView({ user }: { user: DocuMindUser }) {
         setActiveChatId(chatId);
       }
     } finally {
+      clearInterval(streamFlushTimer);
       setIsStreaming(false);
       abortRef.current = null;
     }
-  }, [user, addToast]);
+  }, [user, addToast, summaryMode]);
 
   // ── Send with file ────────────────────────────────────
   const handleSendWithFile = useCallback(async (question: string, file: File, deepScan: boolean): Promise<boolean> => {

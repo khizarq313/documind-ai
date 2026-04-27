@@ -29,6 +29,33 @@ function tokenize(text: string): string[] {
     .filter((t) => t.length > 1 && !STOP_WORDS.has(t));
 }
 
+function looksLikeSummaryQuery(query: string): boolean {
+  return /summari[sz]e|summary|overview|analy[sz]e|analysis|key insights?|key points|important points|explain this (file|document)|describe the (file|document|resume)|main takeaways?/i.test(query);
+}
+
+function mapChunksToContext(chunks: ChunkRecord[], documentName: string, relevanceScore: number = 0): ContextChunk[] {
+  return chunks.map((chunk) => ({
+    content: chunk.content,
+    pageNumber: chunk.pageNumber,
+    documentName,
+    relevanceScore,
+    chunkIndex: chunk.chunkIndex,
+  }));
+}
+
+function getRepresentativeChunks(chunks: ChunkRecord[], documentName: string, topK: number): ContextChunk[] {
+  if (chunks.length <= topK) {
+    return mapChunksToContext(chunks, documentName);
+  }
+
+  const positions = Array.from({ length: topK }, (_, index) => (
+    Math.round((index * (chunks.length - 1)) / Math.max(topK - 1, 1))
+  ));
+  const uniqueIndices = [...new Set(positions)];
+
+  return mapChunksToContext(uniqueIndices.map((index) => chunks[index]), documentName);
+}
+
 // ── BM25 Implementation ──────────────────────────
 
 const K1 = 1.5; // term frequency saturation parameter
@@ -101,14 +128,7 @@ export function retrieveTopChunks(
 
   const queryTokens = tokenize(query);
   if (queryTokens.length === 0) {
-    // If no meaningful tokens, return first k chunks
-    return chunks.slice(0, topK).map((c) => ({
-      content: c.content,
-      pageNumber: c.pageNumber,
-      documentName,
-      relevanceScore: 0,
-      chunkIndex: c.chunkIndex,
-    }));
+    return getRepresentativeChunks(chunks, documentName, topK);
   }
 
   const index = buildIndex(chunks);
@@ -120,9 +140,22 @@ export function retrieveTopChunks(
     return { chunk, score };
   });
 
+  const relevant = scored.filter(({ score }) => score > 0);
+  if (relevant.length === 0) {
+    if (looksLikeSummaryQuery(query)) {
+      return getRepresentativeChunks(chunks, documentName, topK);
+    }
+
+    return [];
+  }
+
   // Sort by score descending, take top-k
-  scored.sort((a, b) => b.score - a.score);
-  const topChunks = scored.slice(0, topK);
+  relevant.sort((a, b) => b.score - a.score);
+  const strongestScore = relevant[0]?.score ?? 0;
+  const dynamicThreshold = strongestScore * 0.22;
+  const topChunks = relevant
+    .filter(({ score }, indexPosition) => indexPosition === 0 || score >= dynamicThreshold)
+    .slice(0, topK);
 
   return topChunks.map(({ chunk, score }) => ({
     content: chunk.content,

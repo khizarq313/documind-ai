@@ -47,6 +47,71 @@ export interface Citation {
   relevanceScore?: number;
 }
 
+export type ContactLinkType = 'email' | 'phone' | 'linkedin' | 'github' | 'website';
+
+export interface ContactLink {
+  type: ContactLinkType;
+  label: string;
+  value: string;
+  href: string;
+}
+
+export interface ResumeExperienceItem {
+  role: string;
+  company: string;
+  duration: string;
+  highlights: string[];
+}
+
+export interface ResumeProjectItem {
+  name: string;
+  detail: string;
+  technologies: string[];
+}
+
+export interface ResumeEducationItem {
+  institution: string;
+  degree: string;
+  stream: string;
+  year?: string;
+}
+
+export interface AnalysisSection {
+  title: string;
+  summary: string;
+  bullets: string[];
+}
+
+export interface ResumeSummaryDetails {
+  headline: string;
+  targetRole: string;
+  seniority: string;
+  profileSummary: string;
+  skills: string[];
+  experience: ResumeExperienceItem[];
+  projects: ResumeProjectItem[];
+  education: ResumeEducationItem[];
+  strengths: string[];
+  gaps: string[];
+  atsScore: number;
+}
+
+export interface ResumeMetadata {
+  atsScore: number;
+  contactLinks: ContactLink[];
+  skills?: string[];
+  profileTitle?: string;
+}
+
+export interface DocumentProfile {
+  documentType: string;
+  isResume: boolean;
+  contactLinks: ContactLink[];
+  skills: string[];
+  profileTitle?: string;
+  atsScore?: number;
+}
+
 export interface Message {
   id: string;
   role: 'user' | 'assistant';
@@ -57,6 +122,8 @@ export interface Message {
   isStreaming?: boolean;
   timestamp: string;
   attachment?: MessageAttachment;
+  documentType?: string;
+  resumeMetadata?: ResumeMetadata;
 }
 
 export type ChatStatus = 'ready' | 'uploading' | 'indexing' | 'processing' | 'indexed' | 'failed';
@@ -111,6 +178,9 @@ export interface DocumentSummaryResponse {
   finalTakeaway: string;
   documentType: string;
   contactInfo: string[];
+  contactLinks?: ContactLink[];
+  sections?: AnalysisSection[];
+  resumeSummary?: ResumeSummaryDetails | null;
   confidence: number;
 }
 
@@ -141,6 +211,8 @@ export interface QueryRequest {
   question: string;
   contextChunks: ContextChunk[];
   documentName: string;
+  mode: SummaryMode;
+  documentProfile?: DocumentProfile;
 }
 
 export interface SummarizeRequest {

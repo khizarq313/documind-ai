@@ -1,7 +1,7 @@
-﻿'use client';
+'use client';
 
 import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
-import { FileText, Paperclip, Plus, Send, X, Zap } from 'lucide-react';
+import { FileText, Plus, ArrowUp, X, Zap, File, Brain, Search, Sparkles, ChevronRight, Lightbulb } from 'lucide-react';
 
 const SUMMARY_MODES_LIST = [
   { value: 'normal', label: 'Normal' },
@@ -12,7 +12,22 @@ const SUMMARY_MODES_LIST = [
   { value: 'student', label: 'Student Notes' },
 ];
 
-const SUMMARY_MODES = SUMMARY_MODES_LIST;
+const ACTION_MENU_ITEMS = [
+  { id: 'attach', label: 'Add photos & files', icon: File, type: 'file' },
+  { id: 'thinking', label: 'Thinking', icon: Brain, type: 'mode', value: 'normal' },
+  { id: 'deep', label: 'Deep research', icon: Search, type: 'mode', value: 'deep' },
+  { id: 'quick', label: 'Quick mode', icon: Sparkles, type: 'mode', value: 'quick' },
+  { id: 'standard', label: 'Standard', icon: Zap, type: 'mode', value: 'standard' },
+  { id: 'executive', label: 'Executive', icon: Zap, type: 'mode', value: 'executive' },
+  { id: 'student', label: 'Student notes', icon: Zap, type: 'mode', value: 'student' },
+];
+
+const HINTS = [
+  'Summarize this document',
+  'Key insights',
+  'Explain this file',
+  'Important points',
+];
 
 export interface ChatInputHandle {
   openFilePicker: () => void;
@@ -47,25 +62,12 @@ const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(function ChatInput
   onSummaryModeChange,
 }, ref) {
   const [attachedFile, setAttachedFile] = useState<File | null>(null);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isSheetClosing, setIsSheetClosing] = useState(false);
-  const sheetCloseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [isPlusMenuOpen, setIsPlusMenuOpen] = useState(false);
+  const [isHintsOpen, setIsHintsOpen] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const closeSheet = useCallback(() => {
-    setIsSheetClosing(true);
-    sheetCloseTimer.current = setTimeout(() => {
-      setIsMobileMenuOpen(false);
-      setIsSheetClosing(false);
-    }, 240);
-  }, []);
-
-  useEffect(() => {
-    return () => {
-      if (sheetCloseTimer.current) clearTimeout(sheetCloseTimer.current);
-    };
-  }, []);
+  const plusMenuRef = useRef<HTMLDivElement>(null);
+  const plusButtonRef = useRef<HTMLButtonElement>(null);
 
   const clearAttachment = useCallback(() => {
     setAttachedFile(null);
@@ -82,19 +84,15 @@ const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(function ChatInput
   useEffect(() => {
     const ta = textareaRef.current;
     if (ta) {
-      ta.style.height = 'auto';
-      ta.style.height = `${Math.min(ta.scrollHeight, 140)}px`;
+      ta.style.height = '0px';
+      const nextHeight = Math.min(ta.scrollHeight, 132);
+      ta.style.height = `${nextHeight}px`;
     }
   }, [value]);
 
   const placeholder = useMemo(() => {
-    if (attachedFile) return 'Add an optional prompt to send with this PDF...';
-    if (activeDoc) {
-      const truncated = activeDoc.length > 24 ? `${activeDoc.slice(0, 22)}\u2026` : activeDoc;
-      return `Ask a question about ${truncated}`;
-    }
-    return 'Ask a question or attach a PDF...';
-  }, [activeDoc, attachedFile]);
+    return 'Ask anything';
+  }, []);
 
   const canSend = Boolean(value.trim()) && !disabled && !isUploading;
 
@@ -125,16 +123,50 @@ const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(function ChatInput
     onValueChange(e.target.value);
   };
 
-  const handleSuggestionClick = useCallback((suggestion: string) => {
-    onValueChange(suggestion);
-    textareaRef.current?.focus();
-  }, [onValueChange]);
-
   const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) setAttachedFile(file);
     e.target.value = '';
   };
+
+  const handlePlusMenuAction = (item: typeof ACTION_MENU_ITEMS[0]) => {
+    if (item.type === 'file') {
+      fileInputRef.current?.click();
+    } else if (item.type === 'mode' && item.value) {
+      onSummaryModeChange?.(item.value);
+    }
+    setIsPlusMenuOpen(false);
+    setIsHintsOpen(false);
+  };
+
+  const handleHintClick = (hint: string) => {
+    onValueChange(hint);
+    setIsPlusMenuOpen(false);
+    setIsHintsOpen(false);
+    textareaRef.current?.focus();
+  };
+
+  const closePlusMenu = useCallback(() => {
+    setIsPlusMenuOpen(false);
+    setIsHintsOpen(false);
+  }, []);
+
+  // Close plus menu on outside click
+  useEffect(() => {
+    const handleOutsideClick = (e: MouseEvent) => {
+      if (
+        isPlusMenuOpen &&
+        plusMenuRef.current &&
+        plusButtonRef.current &&
+        !plusMenuRef.current.contains(e.target as Node) &&
+        !plusButtonRef.current.contains(e.target as Node)
+      ) {
+        closePlusMenu();
+      }
+    };
+    document.addEventListener('mousedown', handleOutsideClick);
+    return () => document.removeEventListener('mousedown', handleOutsideClick);
+  }, [isPlusMenuOpen, closePlusMenu]);
 
   return (
     <div className="chat-input-wrapper">
@@ -142,20 +174,20 @@ const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(function ChatInput
         <div className="chat-input-glow" />
 
         <div className="chat-input-inner">
-          {statusText ? (
-            <div className="chat-input-status">
-              <span className="mono-label">{statusText}</span>
-            </div>
-          ) : null}
-
-          {attachedFile ? (
-            <div className="attachment-chip-row">
-              <div className="attachment-chip">
-                <FileText size={14} />
-                <span className="attachment-chip-name">{attachedFile.name}</span>
+          {/* Attachment card — above the form row, ChatGPT style */}
+          {attachedFile && (
+            <div className="attachment-file-row">
+              <div className="attachment-file-card">
+                <div className="attachment-file-icon">
+                  <FileText size={22} />
+                </div>
+                <div className="attachment-file-info">
+                  <span className="attachment-file-name">{attachedFile.name}</span>
+                  <span className="attachment-file-type">PDF</span>
+                </div>
                 <button
                   type="button"
-                  className="attachment-chip-remove"
+                  className="attachment-file-remove"
                   aria-label="Remove attachment"
                   onClick={clearAttachment}
                 >
@@ -163,82 +195,111 @@ const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(function ChatInput
                 </button>
               </div>
             </div>
-          ) : null}
+          )}
 
-          <textarea
-            ref={textareaRef}
-            className="chat-textarea"
-            placeholder={placeholder}
-            value={value}
-            onChange={handleInput}
-            onKeyDown={handleKeyDown}
-            disabled={disabled || isUploading}
-            rows={1}
-            id="chat-input"
-            aria-label="Message input"
-          />
-
-          <div className="chat-input-actions">
+          <div className="chat-input-form">
+            {/* Plus button (left) */}
             <div className="chat-input-left">
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".pdf"
-                hidden
-                onChange={handleFileInput}
-              />
-
-              <button
-                className="btn-icon"
-                type="button"
-                aria-label="Attach PDF"
-                id="attach-file"
-                onClick={() => !isUploading && fileInputRef.current?.click()}
-                disabled={isUploading}
-                title="Attach a PDF"
-              >
-                <Paperclip size={18} />
-              </button>
-
-              {/* Mobile-only + button */}
-              <button
-                className={`mobile-plus-btn${isMobileMenuOpen ? ' active' : ''}`}
-                type="button"
-                aria-label="More options"
-                onClick={() => isMobileMenuOpen ? closeSheet() : setIsMobileMenuOpen(true)}
-              >
-                <Plus size={18} />
-              </button>
-
-              <div className="input-divider" />
-
-              <div className="summary-mode-control">
-                <select
-                  className="summary-mode-select"
-                  value={summaryMode}
-                  onChange={(e) => onSummaryModeChange?.(e.target.value)}
+              <div className="plus-button-wrapper">
+                <button
+                  ref={plusButtonRef}
+                  className="plus-button"
+                  type="button"
+                  aria-label="Add options"
+                  onClick={() => { setIsPlusMenuOpen(!isPlusMenuOpen); setIsHintsOpen(false); }}
                   disabled={isUploading}
-                  aria-label="Summary Mode"
-                  title="Choose summary mode"
                 >
-                  {SUMMARY_MODES.map((m) => (
-                    <option key={m.value} value={m.value}>{m.label}</option>
-                  ))}
-                </select>
+                  <Plus size={20} />
+                </button>
+
+                {/* Plus menu — opens above */}
+                {isPlusMenuOpen && (
+                  <div ref={plusMenuRef} className="plus-menu">
+                    {ACTION_MENU_ITEMS.map((item) => {
+                      const IconComponent = item.icon;
+                      return (
+                        <button
+                          key={item.id}
+                          className="plus-menu-item"
+                          type="button"
+                          onClick={() => handlePlusMenuAction(item)}
+                          disabled={disabled || isUploading}
+                        >
+                          <IconComponent size={16} />
+                          <span>{item.label}</span>
+                        </button>
+                      );
+                    })}
+
+                    {/* Hints submenu trigger */}
+                    <div
+                      className={`plus-menu-item plus-menu-more${isHintsOpen ? ' active' : ''}`}
+                      onClick={() => setIsHintsOpen(!isHintsOpen)}
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => e.key === 'Enter' && setIsHintsOpen(!isHintsOpen)}
+                      aria-label="Hints"
+                    >
+                      <Lightbulb size={16} />
+                      <span>Hints</span>
+                      <ChevronRight size={14} className="plus-menu-more-arrow" />
+
+                      {/* Hints submenu — appears to the right */}
+                      {isHintsOpen && (
+                        <div className="hints-submenu">
+                          {HINTS.map((hint) => (
+                            <button
+                              key={hint}
+                              className="hints-submenu-item"
+                              type="button"
+                              onClick={(e) => { e.stopPropagation(); handleHintClick(hint); }}
+                              disabled={disabled || isUploading}
+                            >
+                              {hint}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
+            {/* Textarea (center) */}
+            <textarea
+              ref={textareaRef}
+              className="chat-textarea"
+              placeholder={placeholder}
+              value={value}
+              onChange={handleInput}
+              onKeyDown={handleKeyDown}
+              disabled={disabled || isUploading}
+              rows={1}
+              id="chat-input"
+              aria-label="Message input"
+            />
+
+            {/* Send button (right) */}
             <button
-              className="send-button"
+              className={`send-button${canSend ? ' active' : ''}`}
               type="button"
               onClick={() => void handleSubmit()}
               disabled={!canSend}
               id="send-button"
               aria-label="Send message"
             >
-              {isUploading ? <span className="send-spinner" aria-hidden="true" /> : <Send size={18} />}
+              {isUploading ? <span className="send-spinner" aria-hidden="true" /> : <ArrowUp size={20} />}
             </button>
           </div>
+
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".pdf"
+            hidden
+            onChange={handleFileInput}
+          />
         </div>
       </div>
 
@@ -249,7 +310,7 @@ const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(function ChatInput
               key={s}
               className="quick-action-btn"
               type="button"
-              onClick={() => handleSuggestionClick(s)}
+              onClick={() => onValueChange(s)}
               disabled={disabled || isUploading}
             >
               <Zap size={14} />
@@ -258,57 +319,6 @@ const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(function ChatInput
           ))}
         </div>
       ) : null}
-
-      {/* Mobile bottom-sheet: modes + suggestions */}
-      {isMobileMenuOpen && (
-        <div
-          className={`mobile-sheet-overlay${isSheetClosing ? ' closing' : ''}`}
-          onClick={closeSheet}
-        >
-          <div
-            className={`mobile-sheet${isSheetClosing ? ' closing' : ''}`}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="mobile-sheet-handle" />
-
-            <div className="mobile-sheet-section">
-              <p className="mobile-sheet-label">Mode</p>
-              <div className="mobile-sheet-modes">
-                {SUMMARY_MODES_LIST.map(({ value, label }) => (
-                  <button
-                    key={value}
-                    className={`mobile-mode-btn${summaryMode === value ? ' active' : ''}`}
-                    type="button"
-                    disabled={disabled || isUploading}
-                    onClick={() => { onSummaryModeChange?.(value); closeSheet(); }}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {suggestions.length > 0 && (
-              <div className="mobile-sheet-section">
-                <p className="mobile-sheet-label">Suggestions</p>
-                <div className="mobile-sheet-hints">
-                  {suggestions.map((s) => (
-                    <button
-                      key={s}
-                      className="mobile-hint-btn"
-                      type="button"
-                      onClick={() => { handleSuggestionClick(s); closeSheet(); }}
-                      disabled={disabled || isUploading}
-                    >
-                      {s}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   );
 });
