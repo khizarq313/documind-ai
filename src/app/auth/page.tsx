@@ -2,12 +2,13 @@
 
 import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { ArrowRight, Sparkles, Shield, Zap } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import Image from 'next/image';
 
 export default function AuthPage() {
   const { login, user, isLoading } = useAuth();
   const [name, setName] = useState('');
+  const [agreed, setAgreed] = useState(false);
 
   if (isLoading) {
     return (
@@ -21,7 +22,7 @@ export default function AuthPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (name.trim().length > 0) login(name.trim());
+    if (name.trim().length > 0 && agreed) login(name.trim());
   };
 
   return (
@@ -45,11 +46,18 @@ export default function AuthPage() {
       {/* ── Card (desktop) / flat form (mobile) ── */}
       <div className="auth-card animate-slide-up">
 
-        {/* Desktop-only logo block */}
+        {/* Desktop-only logo block with hero wave */}
         <div className="auth-desktop-logo">
-          <Image src="/brand-mark.svg" alt="DocuMind AI Logo" width={72} height={72} priority />
-          <h1 className="auth-desktop-brand">DocuMind AI</h1>
-          <p className="auth-desktop-sub">Intelligent Document Analysis</p>
+          <div className="auth-desktop-logo-inner">
+            <Image src="/brand-mark.svg" alt="DocuMind AI Logo" width={72} height={72} priority className="auth-desktop-logo-img" />
+            <h1 className="auth-desktop-brand">DocuMind AI</h1>
+            <p className="auth-desktop-sub">Intelligent Document Analysis</p>
+          </div>
+          <div className="auth-desktop-wave" aria-hidden="true">
+            <svg viewBox="0 0 560 72" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M0,48 C80,8 160,72 280,40 C360,18 460,62 560,36 L560,72 L0,72 Z" className="auth-desktop-wave-path" />
+            </svg>
+          </div>
         </div>
 
         <p className="auth-kicker">GET STARTED</p>
@@ -72,7 +80,7 @@ export default function AuthPage() {
           <button
             type="submit"
             className="btn-primary auth-submit"
-            disabled={name.trim().length === 0}
+            disabled={name.trim().length === 0 || !agreed}
             id="auth-submit-btn"
           >
             Continue to Workspace
@@ -80,18 +88,22 @@ export default function AuthPage() {
           </button>
         </form>
 
-        {/* Feature pills */}
-        <div className="auth-feature-pills">
-          {[
-            { icon: Sparkles, label: 'AI-Powered Analysis' },
-            { icon: Shield, label: 'Privacy First' },
-            { icon: Zap, label: 'Instant Insights' },
-          ].map(({ icon: Icon, label }) => (
-            <div key={label} className="auth-feature-pill">
-              <Icon size={12} style={{ color: 'var(--color-primary)' }} />
-              {label}
-            </div>
-          ))}
+        {/* Terms agreement checkbox */}
+        <div className="auth-agreement">
+          <label className="auth-agreement-label">
+            <input
+              type="checkbox"
+              className="auth-agreement-checkbox"
+              checked={agreed}
+              onChange={(e) => setAgreed(e.target.checked)}
+            />
+            <span className="auth-agreement-text">
+              By continuing you agree to our{' '}
+              <button type="button" className="auth-agreement-link">Terms and conditions</button>
+              {' '}and{' '}
+              <button type="button" className="auth-agreement-link">Privacy policy</button>.
+            </span>
+          </label>
         </div>
       </div>
     </div>

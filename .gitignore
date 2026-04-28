@@ -42,3 +42,5 @@ next-env.d.ts
 output.txt
 rename.js
 lint_output.txt
+graphify-out
+.github
