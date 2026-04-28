@@ -259,7 +259,7 @@ export default function DocumentsPage() {
                           {isMenuOpen && (
                             <div className="doc-menu-dropdown animate-fade-in">
                               <button onClick={() => { handleOpenInWorkspace(doc.id); setMenuOpen(null); }}>
-                                <ExternalLink size={13} /> Open in Workspace
+                                <ExternalLink size={13} /> Open
                               </button>
                               <button style={{ color: 'var(--color-error)' }} onClick={() => { setDeleteTarget(doc.id); setMenuOpen(null); }}>
                                 <Trash2 size={13} /> Delete

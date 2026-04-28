@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { createPortal } from 'react-dom';
-import { ArrowLeft, Bell, LogOut, Menu, MoonStar, Sparkles, SunMedium, UserRound } from 'lucide-react';
+import { ArrowLeft, Bell, LogOut, Menu, MoonStar, Sparkles, SunMedium, UserRound, X } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 
@@ -32,6 +32,15 @@ export default function Navbar({ onToggleSidebar, isSidebarOpen = true }: Navbar
     };
     document.addEventListener('mousedown', handlePointerDown);
     return () => document.removeEventListener('mousedown', handlePointerDown);
+  }, []);
+
+  // Close profile dropdown on touch scroll (mobile only), but not on mouse wheel
+  useEffect(() => {
+    const handleTouchMove = () => {
+      setIsProfileOpen(false);
+    };
+    window.addEventListener('touchmove', handleTouchMove, { passive: true });
+    return () => window.removeEventListener('touchmove', handleTouchMove);
   }, []);
 
   if (pathname === '/auth') return null;
@@ -65,16 +74,16 @@ export default function Navbar({ onToggleSidebar, isSidebarOpen = true }: Navbar
             aria-label={isWorkspacePage ? (isSidebarOpen ? 'Collapse sidebar' : 'Open sidebar') : 'Go to workspace'}
             id="workspace-sidebar-toggle"
           >
-            {isWorkspacePage ? <Menu size={18} /> : <ArrowLeft size={18} />}
+            {isWorkspacePage ? (isSidebarOpen ? <X size={18} /> : <Menu size={18} />) : <ArrowLeft size={18} />}
           </button>
 
-          <div className="navbar-brand">
+          <Link href="/" className="navbar-brand" aria-label="DocuMind AI — Home">
             <Image className="navbar-logo-mark" src="/brand-mark.svg" alt="DocuMind AI Logo" width={28} height={28} priority />
             <div className="navbar-logo" aria-label="DocuMind AI">
               <span className="navbar-logo-word">DocuMind</span>
               <span className="navbar-logo-accent">AI</span>
             </div>
-          </div>
+          </Link>
 
           <nav className="navbar-links">
             {navLinks.map(({ href, label }) => (

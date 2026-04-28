@@ -79,6 +79,8 @@ function WorkspaceView({ user }: { user: DocuMindUser }) {
   const isStreamingRef = useRef(isStreaming);
   const chatsRef = useRef(chats);
   const activeChatIdRef = useRef(activeChatId);
+  const swipeStartX = useRef<number>(0);
+  const swipeStartY = useRef<number>(0);
 
   useEffect(() => { isUploadingRef.current = isUploading; }, [isUploading]);
   useEffect(() => { isStreamingRef.current = isStreaming; }, [isStreaming]);
@@ -529,7 +531,20 @@ function WorkspaceView({ user }: { user: DocuMindUser }) {
           onClearAll={handleClearAll}
         />
 
-        <main className="workspace-main animate-fade-in">
+        <main
+          className="workspace-main animate-fade-in"
+          onTouchStart={(e) => {
+            swipeStartX.current = e.touches[0].clientX;
+            swipeStartY.current = e.touches[0].clientY;
+          }}
+          onTouchEnd={(e) => {
+            const dx = e.changedTouches[0].clientX - swipeStartX.current;
+            const dy = Math.abs(e.changedTouches[0].clientY - swipeStartY.current);
+            if (dx > 50 && dy < dx && swipeStartX.current < 40 && !isSidebarOpen) {
+              setIsSidebarOpen(true);
+            }
+          }}
+        >
           {showCenteredUpload ? (
             // ── Empty / first-run state ──
             <div className="chat-scroll-area">
